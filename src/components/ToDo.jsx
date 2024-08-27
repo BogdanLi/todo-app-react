@@ -1,33 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "./Box";
 import ListItem from "./ListItem";
 
+const tasksFromLS = localStorage.getItem("tasks");
+
 const ToDo = () => {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      name: "Закрыть задачу",
-      completed: false,
-    },
-    {
-      id: 2,
-      name: "Приготовить ужин",
-      completed: false,
-    },
-    {
-      id: 3,
-      name: "Купить продукты",
-      completed: false,
-    },
-  ]);
+  const [tasks, setTasks] = useState(
+    tasksFromLS ? JSON.parse(tasksFromLS) : []
+  );
 
   const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTodo = (event) => {
     event.preventDefault();
 
+    if (inputValue.length === 0) return;
+
     const newTask = {
-      id: 1,
+      id: new Date(),
       name: inputValue,
       completed: false,
     };
@@ -35,6 +29,25 @@ const ToDo = () => {
     setTasks([...tasks, ...[newTask]]);
 
     setInputValue("");
+  };
+
+  const deleteTask = (id) => {
+    const newTasks = tasks.filter((el) => el.id != id);
+
+    setTasks(newTasks);
+  };
+
+  const completeTask = (id) => {
+    const newTasks = tasks.map((task) => {
+      if (task.id === id) {
+        const newTask = { ...task, completed: !task.completed };
+        return newTask;
+      } else {
+        return task;
+      }
+    });
+
+    setTasks(newTasks);
   };
 
   return (
@@ -57,7 +70,12 @@ const ToDo = () => {
         </form>
         <div className="space-y-2">
           {tasks.map((task) => (
-            <ListItem key={task.id} {...task} />
+            <ListItem
+              onComplete={completeTask}
+              onDelete={deleteTask}
+              key={task.id}
+              {...task}
+            />
           ))}
         </div>
       </div>
